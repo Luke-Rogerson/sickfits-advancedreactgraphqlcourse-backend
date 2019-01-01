@@ -1,6 +1,6 @@
 const cookieParser = require('cookie-parser');
 const jwt = require('jsonwebtoken');
-require('dotenv').config({ path: 'variables.env' });
+const dotenv = require('dotenv').config({ path: 'variables.env' });
 const createServer = require('./createServer');
 const db = require('./db');
 
@@ -13,9 +13,12 @@ server.express.use(cookieParser());
 server.express.use((req, res, next) => {
   const { token } = req.cookies;
   if (token) {
-    const { userId } = jwt.verify(token, process.env.APP_SECRET);
+    // console.log('JWT: ', jwt.verify(token, dotenv.parsed.APP_SECRET));
+    // This logs: JWT:  { userID: 'cjqe0kf58x3ib0a55hja4kb13', iat: 1546377289 }
+    // Where is 'userID' being set???
+    const { userID } = jwt.verify(token, dotenv.parsed.APP_SECRET);
     // put the userID onto the req for future requests to access
-    req.userId = userId;
+    req.userId = userID;
   }
   next();
 });
