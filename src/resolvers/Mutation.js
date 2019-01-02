@@ -85,6 +85,10 @@ const Mutations = {
       };
     // 5. return the user
     return user;
+  },
+  signOut(parent, args, ctx, info) {
+    ctx.response.clearCookie('token'); // Cookie parser in index gives us access to these functions
+    return { message: 'Goodbye!' };
   }
 };
 
