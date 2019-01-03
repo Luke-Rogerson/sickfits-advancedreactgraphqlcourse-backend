@@ -2,6 +2,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { randomBytes } = require('crypto'); // for generating reset password token
 const { promisify } = require('util'); //NODE: take callback based functions and turn them into promise based
+const { transport, makeANiceEmail } = require('../mail');
 
 const Mutations = {
   async createItem(parent, args, ctx, info) {
@@ -92,6 +93,7 @@ const Mutations = {
     ctx.response.clearCookie('token'); // Cookie parser in index gives us access to these functions
     return { message: 'Goodbye!' };
   },
+
   async requestReset(parent, args, ctx, info) {
     // Check if its a real user
     const user = await ctx.db.query.user({ where: { email: args.email } });
@@ -106,6 +108,18 @@ const Mutations = {
       where: { email: args.email },
       data: { resetToken, resetTokenExpiry } //data we want to update on that user
     });
+
+    await transport.sendMail({
+      from: 'bob@bob.com',
+      to: user.email,
+      subject: 'Your Password Reset Token',
+      html: makeANiceEmail(
+        `Reset token: \n\n <a href=${
+          process.env.FRONTEND_URL
+        }/reset?resetToken=${resetToken}>Click here to reset</a>`
+      )
+    });
+
     return { message: 'Thanks!' };
 
     // Email them that reset token
