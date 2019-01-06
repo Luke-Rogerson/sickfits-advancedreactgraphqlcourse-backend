@@ -1,4 +1,5 @@
 const { forwardTo } = require('prisma-binding');
+const { hasPermission } = require('../utils');
 
 const Query = {
   items: forwardTo('db'),
@@ -15,6 +16,16 @@ const Query = {
       },
       info
     );
+  },
+  async users(parent, args, ctx, info) {
+    // 1. Check if they are logged in
+    if (!ctx.request.userId) throw new Error('You must be logged in!');
+    // 2. Check if the user has the permission to query all the users
+    hasPermission(ctx.request.user, ['ADMIN', 'PERMISSIONUPDATE']);
+    // 3. If they do, query all the users
+    return await ctx.db.query.users({}, info);
+    // Empty where object, info will include the GraphQL query that contains
+    // the fields that we're requesting from frontend
   }
 };
 
