@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const { randomBytes } = require('crypto'); // for generating reset password token
 const { promisify } = require('util'); //NODE: take callback based functions and turn them into promise based
 const { transport, makeANiceEmail } = require('../mail');
+const { hasPermission } = require('../utils');
 
 const Mutations = {
   async createItem(parent, args, ctx, info) {
@@ -166,6 +167,35 @@ const Mutations = {
         maxAge: 1000 * 60 * 60 * 24 * 365
       };
     return updatedUser;
+  },
+  async updatePermissions(parent, args, ctx, info) {
+    // Check if logged in
+    if (!ctx.request.userId) {
+      throw new Error('You must be logged in to do this!');
+    }
+    // Query the current user
+    const currentUser = await ctx.db.query.user(
+      {
+        where: {
+          id: ctx.request.userId
+        }
+      },
+      info
+    );
+    // Check if they have permissions to do this
+    hasPermission(currentUser, ['ADMIN', 'PERMISSIONUPDATE']);
+    // Update the permissions
+    return ctx.db.mutation.updateUser(
+      {
+        data: {
+          permissions: {
+            set: args.permissions // because `permissions` is its own enum, have to use set syntax
+          }
+        },
+        where: { id: args.userId }
+      },
+      info
+    );
   }
 };
 
