@@ -31,7 +31,6 @@ server.express.use(async (req, res, next) => {
     { where: { id: req.userId } }, // 1. the `where` query
     '{id, permissions, email, name}' // 2. what fields to grab
   );
-  console.log(user);
   req.user = user;
   next();
 });
