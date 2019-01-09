@@ -51,8 +51,6 @@ const Mutations = {
     // 1. find the item
     const item = await ctx.db.query.item({ where }, `{ id title user {id} }`);
     // 2. check if they own it or have permissions
-    console.log('CTX ', ctx.request.user);
-
     const ownsItem = item.user.id === ctx.request.userId;
     const hasPermissions = ctx.request.user.permissions.some(permission =>
       ['ADMIN', 'ITEMDELETE'].includes(permission)
